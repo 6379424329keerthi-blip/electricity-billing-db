@@ -103,19 +103,32 @@ Render provides a **free PostgreSQL Database** and a **free Node.js Web Service*
 
 ---
 
-### Step 4: Initialize and Seed Database Schema on Render
+### Step 4: Automatic Free Database Seeding (No Paid Shell Required!)
 
-Once your Web Service is deployed and shows **Live**:
-1. Click on the **Shell** tab on the left menu of your Render Web Service.
-2. Run the database setup script:
-   ```bash
+> [!NOTE]
+> On Render's Free tier, the interactive **Shell** tab is disabled unless you upgrade to a paid plan. **You DO NOT need to pay for a subscription.** We have implemented two 100% free ways to initialize and seed your cloud database:
+
+#### Method A: Automatic On-Boot Seeding (Zero Commands Needed)
+We have updated `backend/server.js` to automatically inspect the cloud database on boot.
+Whenever your Render Web Service starts up:
+1. It automatically detects if tables (`users`, `consumers`, `bills`, etc.) are missing.
+2. It automatically creates all schema tables, views, and stored functions.
+3. It automatically populates all 30 consumers, 30 smart meters, readings, bills, and payments!
+4. **All you need to do is push the latest code to GitHub, and Render will auto-deploy and seed everything automatically!**
+
+#### Method B: Seed Directly from Your Laptop PowerShell (10-Second Free Alternative)
+If you ever want to manually trigger seeding on Render's cloud PostgreSQL database from your own computer:
+1. In the **Render Dashboard**, open your PostgreSQL database (`electricity-billing-db`).
+2. Scroll to **Connections** and copy the **External Database URL** (e.g., `postgres://user:password@oregon-postgres.render.com/electricity_billing_db`).
+3. Open PowerShell on your computer in your project folder (`c:\Users\KEERTHI\Downloads\DBMS IA PROJECT`):
+   ```powershell
+   $env:DATABASE_URL="<paste_your_external_database_url_here>"
    npm run db:setup
-   ```
-3. Run the database seed script to populate all 30 consumers, 30 smart meters, readings, bills, and payments:
-   ```bash
    npm run db:seed -- --force
    ```
-4. Done! Click your Render URL (e.g., `https://electricity-smart-grid.onrender.com`) to open your live application!
+4. This connects securely to Render's cloud PostgreSQL across the internet and seeds all tables in 5 seconds!
+
+5. Done! Click your Render Web Service URL (e.g., `https://electricity-smart-grid.onrender.com`) to open your live application!
 
 ---
 
