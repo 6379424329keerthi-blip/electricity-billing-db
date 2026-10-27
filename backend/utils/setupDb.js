@@ -24,7 +24,7 @@ const executeSqlFile = async (filePath) => {
   console.log(`    Successfully applied ${filePath}`);
 };
 
-const runSetup = async () => {
+const runSetup = async (shouldExit = true) => {
   try {
     console.log('===========================================================');
     console.log(' SMART GRID BILLING DATABASE — SAFE SETUP (NON-DESTRUCTIVE)');
@@ -38,15 +38,16 @@ const runSetup = async () => {
     console.log('\n Database setup completed successfully!');
     console.log('   All tables, views, and functions are verified.');
     console.log('   Existing data was strictly preserved.\n');
-    process.exit(0);
+    if (shouldExit) process.exit(0);
   } catch (err) {
     console.error('\n❌ Database setup encountered an error:', err.message);
-    process.exit(1);
+    if (shouldExit) process.exit(1);
+    throw err;
   }
 };
 
 if (require.main === module) {
-  runSetup();
+  runSetup(true);
 }
 
 module.exports = { runSetup };

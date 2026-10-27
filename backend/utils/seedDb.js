@@ -19,24 +19,28 @@ const fs = require('fs');
 const path = require('path');
 const { pool } = require('../config/db');
 
-const runSeed = async () => {
+const runSeed = async (shouldExit = true, force = false) => {
   try {
     console.log('===========================================================');
     console.log(' SMART GRID BILLING DATABASE — SAFE SEED UTILITY');
     console.log('===========================================================');
 
     // 1. Check if database already contains users or consumers
-    const userCheck = await pool.query('SELECT COUNT(*) FROM users');
-    const userCount = parseInt(userCheck.rows[0].count, 10);
+    let userCount = 0;
+    try {
+      const userCheck = await pool.query('SELECT COUNT(*) FROM users');
+      userCount = parseInt(userCheck.rows[0].count, 10);
+    } catch {
+      userCount = 0;
+    }
 
-    const isForce = process.argv.includes('--force');
+    const isForce = force || process.argv.includes('--force');
 
     if (userCount > 0 && !isForce) {
       console.log(`\n Database already contains ${userCount} user accounts and demonstration records.`);
       console.log('   Skipping seed to preserve existing records.');
-      console.log('   Tip: If you explicitly wish to overwrite all data with default seed records,');
-      console.log('   run: npm run db:seed -- --force\n');
-      process.exit(0);
+      if (shouldExit) process.exit(0);
+      return;
     }
 
     if (isForce && userCount > 0) {
@@ -54,20 +58,20 @@ const runSeed = async () => {
     await pool.query(seedSql);
 
     console.log('\n Demonstration data seeded successfully!');
-    console.log('   - 7 User accounts (Admin, Staff, 5 Consumers)');
-    console.log('   - 12 Consumers & Smart Meters');
+    console.log('   - 30 Consumers & 30 Smart Meters');
     console.log('   - 9 Configurable Tariff Slabs');
-    console.log('   - 24 Historical Meter Readings');
-    console.log('   - 12 Billed Statements & 9 Payment Receipts\n');
-    process.exit(0);
+    console.log('   - 48 Historical Meter Readings');
+    console.log('   - 35 Billed Statements & 29 Payment Receipts\n');
+    if (shouldExit) process.exit(0);
   } catch (err) {
     console.error('\n❌ Database seed encountered an error:', err.message);
-    process.exit(1);
+    if (shouldExit) process.exit(1);
+    throw err;
   }
 };
 
 if (require.main === module) {
-  runSeed();
+  runSeed(true, process.argv.includes('--force'));
 }
 
 module.exports = { runSeed };

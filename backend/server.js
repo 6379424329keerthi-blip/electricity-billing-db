@@ -113,5 +113,32 @@ app.listen(PORT, async () => {
   console.log(` Smart Grid Billing API Server running on port ${PORT}`);
   console.log(` API Endpoint: http://localhost:${PORT}/api`);
   console.log(`=======================================================`);
-  await testConnection();
+  const isConnected = await testConnection();
+  if (isConnected) {
+    try {
+      const { pool } = require('./config/db');
+      const { runSetup } = require('./utils/setupDb');
+      const { runSeed } = require('./utils/seedDb');
+
+      const checkTable = await pool.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'users'
+        );
+      `);
+      if (!checkTable.rows[0].exists) {
+        console.log('⚡ Cloud Database schema missing. Auto-running safe setup...');
+        await runSetup(false);
+      }
+
+      const checkUsers = await pool.query('SELECT count(*) FROM users');
+      if (parseInt(checkUsers.rows[0].count, 10) === 0) {
+        console.log('⚡ Cloud Database empty. Auto-seeding demonstration master records...');
+        await runSeed(false);
+      }
+    } catch (e) {
+      console.warn('⚠️  Auto-migration check note:', e.message);
+    }
+  }
 });
